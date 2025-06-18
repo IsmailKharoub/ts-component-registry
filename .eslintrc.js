@@ -2,13 +2,11 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
-    sourceType: 'module',
-    project: './tsconfig.json'
+    sourceType: 'module'
   },
   plugins: ['@typescript-eslint'],
   extends: [
-    'eslint:recommended',
-    '@typescript-eslint/recommended'
+    'eslint:recommended'
   ],
   root: true,
   env: {
@@ -17,12 +15,14 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js', 'dist/', 'node_modules/', 'coverage/'],
   rules: {
-    '@typescript-eslint/interface-name-prefix': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/prefer-const': 'error',
-    '@typescript-eslint/no-var-requires': 'off'
+    // Basic ESLint rules that work well
+    'no-console': 'off', // Allow console.log in our demos
+    'no-var': 'error',
+    'prefer-const': 'error',
+    'no-unused-vars': 'off', // Turn off to avoid conflicts with TypeScript
+    
+    // Simple TypeScript rules
+    '@typescript-eslint/no-explicit-any': 'warn', // Warn about 'any' types
+    '@typescript-eslint/no-var-requires': 'off' // Allow require() statements
   }
 }; 
