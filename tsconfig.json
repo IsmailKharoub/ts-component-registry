@@ -24,7 +24,6 @@
     "node_modules", 
     "dist",
     "**/*.test.ts",
-    "**/__tests__/**/*",
-    "src/demo.ts"
+    "**/__tests__/**/*"
   ]
 } 
