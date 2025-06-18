@@ -4,7 +4,10 @@ import {
     AnalyticsService,
     AnalyticsEvent,
     ComponentMapManager,
-    PhoneVerificationProvider 
+    PhoneVerificationProvider,
+    MessagingService,
+    MessageProviderType,
+    MessageType
 } from './index';
 
 /**
@@ -17,6 +20,7 @@ async function runComponentMapDemo() {
     
     await demonstratePhoneVerification();
     await demonstrateAnalytics();
+    await demonstrateMessaging();
     await demonstrateComponentMapInternals();
 }
 
@@ -156,6 +160,72 @@ async function demonstrateAnalytics() {
 }
 
 /**
+ * Demonstrate messaging services using ComponentMap
+ */
+async function demonstrateMessaging() {
+    console.log('\n📨 MESSAGING DEMO');
+    console.log('-'.repeat(20));
+    
+    // Initialize messaging service - ComponentMap discovers all providers
+    const messagingService = new MessagingService();
+    
+    console.log(`\n📋 Available providers: ${messagingService.getAvailableProviders().join(', ')}`);
+    
+    // Test basic messaging
+    const smsMessage = {
+        to: '+1234567890',
+        from: '+1987654321',
+        text: 'Hello from ComponentMap! This is a test SMS message.',
+        type: MessageType.SMS
+    };
+    
+    // Send via Twilio
+    try {
+        const twilioResponse = await messagingService.sendMessage(MessageProviderType.TWILIO, smsMessage);
+        console.log(`📱 Twilio response: ${twilioResponse.messageId} (cost: $${twilioResponse.cost})`);
+        
+        // Check delivery status
+        await messagingService.getDeliveryStatus(MessageProviderType.TWILIO, twilioResponse.messageId);
+    } catch (error) {
+        console.error('Twilio messaging failed:', error);
+    }
+    
+    // Send via Vonage
+    try {
+        const vonageResponse = await messagingService.sendMessage(MessageProviderType.VONAGE, smsMessage);
+        console.log(`🚀 Vonage response: ${vonageResponse.messageId} (cost: $${vonageResponse.cost})`);
+        
+        // Check delivery status
+        await messagingService.getDeliveryStatus(MessageProviderType.VONAGE, vonageResponse.messageId);
+    } catch (error) {
+        console.error('Vonage messaging failed:', error);
+    }
+    
+    // Demonstrate cost optimization
+    const internationalMessage = {
+        to: '+447700900123', // UK number
+        from: '+1987654321',
+        text: 'International message for cost comparison',
+        type: MessageType.SMS
+    };
+    
+    await messagingService.comparePricing(internationalMessage);
+    await messagingService.sendMessageOptimized(internationalMessage);
+    
+    // Demonstrate bulk messaging
+    const bulkMessages = [
+        { to: '+1111111111', from: '+1987654321', text: 'Bulk message 1', type: MessageType.SMS },
+        { to: '+2222222222', from: '+1987654321', text: 'Bulk message 2', type: MessageType.SMS },
+        { to: '+3333333333', from: '+1987654321', text: 'Bulk message 3', type: MessageType.SMS }
+    ];
+    
+    await messagingService.sendBulkMessages(bulkMessages);
+    
+    // Show provider-specific features
+    await messagingService.getProviderFeatures(MessageProviderType.VONAGE);
+}
+
+/**
  * Demonstrate ComponentMap internals and advanced features
  */
 async function demonstrateComponentMapInternals() {
@@ -178,6 +248,12 @@ async function demonstrateComponentMapInternals() {
     console.log(`   - Size: ${analyticsRegistry.size()}`);
     console.log(`   - Keys: ${analyticsRegistry.getKeys().join(', ')}`);
     
+    // Show messaging registry details
+    const messagingRegistry = manager.getRegistry('messageProviders');
+    console.log(`\n📨 Messaging Registry:`);
+    console.log(`   - Size: ${messagingRegistry.size()}`);
+    console.log(`   - Keys: ${messagingRegistry.getKeys().join(', ')}`);
+    
     // Demonstrate direct registry access
     console.log(`\n🔍 Direct Registry Access:`);
     const twilioProvider = phoneRegistry.get(PhoneVerificationProviderType.TWILIO);
@@ -193,6 +269,8 @@ async function demonstrateComponentMapInternals() {
     console.log(`   ✅ Strategy pattern - easy to add new implementations`);
     console.log(`   ✅ Auto-discovery - components register themselves`);
     console.log(`   ✅ Centralized management - single source of truth`);
+    console.log(`   ✅ Provider selection - automatic optimization and fallbacks`);
+    console.log(`   ✅ Load balancing - distribute work across providers`);
 }
 
 /**
@@ -204,25 +282,34 @@ function showManualApproachComparison() {
     
     console.log(`
 // Without ComponentMap - lots of boilerplate:
-class ManualPhoneService {
-    private providers = new Map<PhoneVerificationProviderType, PhoneVerificationProvider>();
+class ManualMessagingService {
+    private providers = new Map<string, MessageProvider>();
     
     constructor() {
         // Manual registration - easy to forget, error-prone
-        this.providers.set(PhoneVerificationProviderType.TWILIO, new TwilioProvider());
-        this.providers.set(PhoneVerificationProviderType.AWS_SNS, new AWSProvider());
+        this.providers.set('twilio', new TwilioProvider());
+        this.providers.set('vonage', new VonageProvider());
         // Add more providers... manually... every time...
+        // Forgot the new provider? Runtime errors! 💥
+    }
+    
+    async sendOptimized(message: SendMessageDTO) {
+        // Manual cost comparison - repetitive code
+        const twiliosCost = await this.providers.get('twilio')?.getEstimatedCost(message);
+        const vonageCost = await this.providers.get('vonage')?.getEstimatedCost(message);
+        // ... compare manually, handle nulls, etc.
     }
 }
 
 // With ComponentMap - zero boilerplate:
-class ComponentMapPhoneService {
-    private providers: Map<PhoneVerificationProviderType, PhoneVerificationProvider>;
+class ComponentMapMessagingService {
+    private providers = ComponentMapManager.getInstance()
+        .getRegistry<MessageProviderType, MessageProvider>('messageProviders')
+        .getAll(); // 🎉 Automatic discovery and optimization!
     
-    constructor() {
-        // Automatic discovery and registration!
-        this.providers = ComponentMapManager.getInstance()
-            .getRegistry('phoneVerificationProviders').getAll();
+    async sendOptimized(message: SendMessageDTO) {
+        // Automatic cost comparison across all providers
+        return this.sendMessageOptimized(message);
     }
 }
     `);
@@ -235,6 +322,7 @@ if (require.main === module) {
             showManualApproachComparison();
             console.log('\n🎉 ComponentMap Demo completed successfully!');
             console.log('💡 Try adding new providers or handlers to see auto-discovery in action.');
+            console.log('📨 New messaging example shows: cost optimization, fallbacks, and load balancing!');
         })
         .catch((error) => {
             console.error('Demo failed:', error);

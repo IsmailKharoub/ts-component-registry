@@ -32,4 +32,16 @@ export {
     TransactionCompletedAnalyticsHandler,
     DocumentUploadAnalyticsHandler
 } from './examples/analytics/AnalyticsHandler';
-export { AnalyticsService } from './examples/analytics/AnalyticsService'; 
+export { AnalyticsService } from './examples/analytics/AnalyticsService';
+
+// Messaging Example exports
+export { MessageProvider as MessageProviderType, MessageType, MessageStatus } from './examples/messaging/types';
+export type { 
+    SendMessageDTO, 
+    MessageResponse, 
+    MessageDeliveryReport 
+} from './examples/messaging/types';
+export { MessageProvider } from './examples/messaging/MessageProvider';
+export { TwilioMessageProvider } from './examples/messaging/TwilioMessageProvider';
+export { VonageMessageProvider } from './examples/messaging/VonageMessageProvider';
+export { MessagingService } from './examples/messaging/MessagingService'; 
