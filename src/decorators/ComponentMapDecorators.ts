@@ -1,77 +1,148 @@
 import 'reflect-metadata';
-import { ComponentMapManager } from '../core/ComponentMapManager';
+import { DIContainer } from '../core/DIContainer';
 import { ComponentMapKey } from '../core/ComponentMapKey';
+import { ComponentScanner } from '../core/ComponentScanner';
+import { SingletonComponentMap } from '../core/SingletonComponentMap';
 
 // Metadata keys for storing decorator information
-const COMPONENT_MAP_KEY_METADATA = Symbol('componentMapKey');
-const COMPONENT_MAP_METADATA = Symbol('componentMap');
-const REGISTRY_NAME_METADATA = Symbol('registryName');
+const COMPONENT_MAP_FIELDS = Symbol('componentMapFields');
+
+// Global flag to track if components have been scanned
+let componentsScanned = false;
 
 /**
- * Decorator for marking methods that return the component map key
- * Equivalent to Spring Boot's @ComponentMapKey annotation
+ * Component decorator for auto-registration (NestJS style)
+ * Automatically registers the component class in the DI container
+ * 
+ * @param registryName - The name of the registry to register in
+ * @param singleton - Whether to create singleton instances (default: true)
  */
-export function ComponentMapKeyDecorator<T>(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    Reflect.defineMetadata(COMPONENT_MAP_KEY_METADATA, propertyKey, target.constructor);
-}
-
-/**
- * Decorator for marking properties to be injected with component maps
- * Equivalent to Spring Boot's @ComponentMap annotation
- */
-export function ComponentMapDecorator<K, V>(registryName: string) {
-    return function(target: any, propertyKey: string) {
-        Reflect.defineMetadata(COMPONENT_MAP_METADATA, { registryName, propertyKey }, target.constructor);
-    };
-}
-
-/**
- * Auto-registration decorator for components
- * Automatically registers the component in the specified registry
- */
-export function Component<K>(registryName: string) {
+export function Component<K>(registryName: string, singleton: boolean = true) {
     return function<T extends ComponentMapKey<K>>(constructor: new (...args: any[]) => T) {
-        // Store registry name for later use
-        Reflect.defineMetadata(REGISTRY_NAME_METADATA, registryName, constructor);
-        
-        // Register the component automatically when the class is defined
-        const instance = new constructor();
-        const key = instance.getComponentMapKey();
-        
-        const registry = ComponentMapManager.getInstance().getRegistry<K, T>(registryName);
-        registry.register(key, instance);
+        // Register the component constructor in the DI container
+        DIContainer.getInstance().registerComponent(registryName, constructor, singleton);
         
         return constructor;
     };
 }
 
 /**
- * Utility function to initialize component maps for a service instance
- * Should be called in the constructor of services that use @ComponentMapDecorator
+ * ComponentMap decorator (Spring Boot style)
+ * Automatically injects all components from a registry into the decorated field
+ * Returns a SingletonComponentMap that behaves like Map<K, V> but supports multiple components per key
+ * No manual imports or registration needed!
+ * 
+ * Usage:
+ * ```typescript
+ * class MyService {
+ *   @ComponentMap('payment-processors')
+ *   private processors: Map<string, PaymentProcessor>;
+ * }
+ * ```
  */
-export function initializeComponentMaps(target: any): void {
-    const componentMapMetadata = Reflect.getMetadata(COMPONENT_MAP_METADATA, target.constructor);
-    
-    if (componentMapMetadata) {
-        const { registryName, propertyKey } = componentMapMetadata;
-        const registry = ComponentMapManager.getInstance().getRegistry(registryName);
-        target[propertyKey] = registry.getAll();
-    }
+export function ComponentMap<K, V extends ComponentMapKey<K>>(registryName: string) {
+    return function(target: any, propertyKey: string) {
+        // Store metadata about the field
+        const existingFields = Reflect.getMetadata(COMPONENT_MAP_FIELDS, target.constructor) || [];
+        existingFields.push({ registryName, propertyKey });
+        Reflect.defineMetadata(COMPONENT_MAP_FIELDS, existingFields, target.constructor);
+        
+        // Define a getter that lazily retrieves all components as SingletonComponentMap
+        Object.defineProperty(target, propertyKey, {
+            get: function() {
+                return DIContainer.getInstance().getSingletonComponentMap<K, V>(registryName);
+            },
+            enumerable: true,
+            configurable: true
+        });
+    };
 }
 
 /**
- * Auto-discovery function to register all components in a module
- * Call this with an array of component classes to auto-register them
+ * Decorator for injecting a specific component by key
+ * Use this to inject a single component by its key
+ * 
+ * @param registryName - The name of the registry to get from
+ * @param componentKey - The specific component key
  */
-export function autoRegisterComponents<K>(components: Array<new (...args: any[]) => ComponentMapKey<K>>): void {
-    for (const ComponentClass of components) {
-        const registryName = Reflect.getMetadata(REGISTRY_NAME_METADATA, ComponentClass);
-        
-        if (registryName) {
-            const instance = new ComponentClass();
-            const key = instance.getComponentMapKey();
-            const registry = ComponentMapManager.getInstance().getRegistry<K, ComponentMapKey<K>>(registryName);
-            registry.register(key, instance);
-        }
+export function InjectComponent<K>(registryName: string, componentKey: K) {
+    return function(target: any, propertyKey: string) {
+        // Define a getter that lazily retrieves the component
+        Object.defineProperty(target, propertyKey, {
+            get: function() {
+                return DIContainer.getInstance().get(registryName, componentKey);
+            },
+            enumerable: true,
+            configurable: true
+        });
+    };
+}
+
+/**
+ * Initialize method - call this at application startup
+ * Scans for all components automatically
+ */
+export async function initializeComponentMaps(
+    scanDirs: string[] = ['src'],
+    excludePatterns: string[] = ['**/*.test.ts', '**/*.test.js', '**/*.spec.ts', '**/*.spec.js']
+): Promise<void> {
+    if (componentsScanned) return; // Already scanned
+    
+    console.log('🚀 Starting component auto-discovery...');
+    
+    const scanner = ComponentScanner.getInstance();
+    
+    for (const dir of scanDirs) {
+        await scanner.scanComponents(dir, ['**/*.ts', '**/*.js'], excludePatterns);
     }
-} 
+    
+    componentsScanned = true;
+    
+    console.log('✅ Component auto-discovery complete!');
+}
+
+/**
+ * Utility function to scan and register components from a module
+ * Pass an array of component classes to register them all at once
+ */
+export function registerComponents<K>(
+    registryName: string, 
+    components: Array<new (...args: any[]) => ComponentMapKey<K>>,
+    singleton: boolean = true
+): void {
+    const container = DIContainer.getInstance();
+    
+    for (const ComponentClass of components) {
+        container.registerComponent(registryName, ComponentClass, singleton);
+    }
+    
+    console.log(`📦 Registered ${components.length} components in '${registryName}' registry`);
+}
+
+/**
+ * Get component by registry and key (convenience function)
+ */
+export function getComponent<K, T extends ComponentMapKey<K>>(
+    registryName: string, 
+    key: K
+): T | undefined {
+    return DIContainer.getInstance().get<K, T>(registryName, key);
+}
+
+/**
+ * Get all components from a registry (convenience function)
+ */
+export function getAllComponents<K, T extends ComponentMapKey<K>>(
+    registryName: string
+): Map<K, T> {
+    return DIContainer.getInstance().getAll<K, T>(registryName);
+}
+
+/**
+ * Get SingletonComponentMap from a registry (Spring Boot style)
+ */
+export function getSingletonComponentMap<K, T extends ComponentMapKey<K>>(
+    registryName: string
+): SingletonComponentMap<K, T> {
+    return DIContainer.getInstance().getSingletonComponentMap<K, T>(registryName);
+}

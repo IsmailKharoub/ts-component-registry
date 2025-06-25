@@ -1,47 +1,24 @@
-// Core ComponentMap exports
-export { ComponentRegistry } from './core/ComponentRegistry';
-export { ComponentMapManager } from './core/ComponentMapManager';
+// Core ComponentMap functionality
 export { ComponentMapKey } from './core/ComponentMapKey';
+export { DIContainer } from './core/DIContainer';
+export { ComponentScanner } from './core/ComponentScanner';
+export { SingletonComponentMap } from './core/SingletonComponentMap';
 
-// Decorator exports
-export { 
-    ComponentMapKeyDecorator,
-    ComponentMapDecorator,
+// Decorators
+export {
     Component,
+    ComponentMap,
+    InjectComponent,
     initializeComponentMaps,
-    autoRegisterComponents
+    registerComponents,
+    getComponent,
+    getAllComponents,
+    getSingletonComponentMap
 } from './decorators/ComponentMapDecorators';
 
-// Phone Verification Example exports
-export { PhoneVerificationProviderType } from './examples/phone-verification/types';
-export type { 
-    InitiatePhoneVerificationDTO, 
-    CompletePhoneVerificationDTO 
-} from './examples/phone-verification/types';
-export { PhoneVerificationProvider } from './examples/phone-verification/PhoneVerificationProvider';
-export { TwilioPhoneVerificationProvider } from './examples/phone-verification/TwilioPhoneVerificationProvider';
-export { AWSPhoneVerificationProvider } from './examples/phone-verification/AWSPhoneVerificationProvider';
-export { PhoneVerificationService } from './examples/phone-verification/PhoneVerificationService';
+// Payment examples
+export { PaymentProcessor } from './examples/payment/PaymentProcessor';
+export { StripeProcessor } from './examples/payment/StripeProcessor';
+export { PayPalProcessor } from './examples/payment/PayPalProcessor';
+export { PaymentService } from './examples/payment/PaymentService';
 
-// Analytics Example exports
-export { AnalyticsEvent } from './examples/analytics/types';
-export type { AnalyticsDataDTO, UserInfo } from './examples/analytics/types';
-export { 
-    AnalyticsHandler,
-    UserSignupAnalyticsHandler,
-    TransactionCompletedAnalyticsHandler,
-    DocumentUploadAnalyticsHandler
-} from './examples/analytics/AnalyticsHandler';
-export { AnalyticsService } from './examples/analytics/AnalyticsService';
-
-// Messaging Example exports
-export { MessageProvider as MessageProviderType, MessageType, MessageStatus } from './examples/messaging/types';
-export type { 
-    SendMessageDTO, 
-    MessageResponse, 
-    MessageDeliveryReport 
-} from './examples/messaging/types';
-export { MessageProvider } from './examples/messaging/MessageProvider';
-export { TwilioMessageProvider } from './examples/messaging/TwilioMessageProvider';
-export { VonageMessageProvider } from './examples/messaging/VonageMessageProvider';
-export { MessagingService } from './examples/messaging/MessagingService'; 

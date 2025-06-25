@@ -13,6 +13,8 @@
     "build": "tsc",
     "prepublishOnly": "npm run clean && npm run build",
     "demo": "npm run build && node dist/demo.js",
+    "demo:auto-discovery": "npm run build && node dist/examples/payment/demo.js",
+    "demo:spring-boot": "npm run build && node dist/examples/spring-boot-style/demo.js",
     "clean": "rm -rf dist",
     "rebuild": "npm run clean && npm run build",
     "start": "npm run demo",
