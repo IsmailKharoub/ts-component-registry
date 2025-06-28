@@ -1,17 +1,16 @@
-# 🔥 ComponentMap for TypeScript
+# 🔥 TypeScript Component Registry
 
 > **Eliminate boilerplate code with automatic component discovery**  
-> A TypeScript library that provides automatic dependency injection of component maps using decorators. Zero configuration, maximum productivity.
+> A TypeScript library that provides automatic dependency injection and component mapping using decorators. Zero configuration, maximum productivity.
 
-[![npm version](https://badge.fury.io/js/@your-scope%2Fcomponent-map.svg)](https://badge.fury.io/js/@your-scope%2Fcomponent-map)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.9+-blue.svg)](https://www.typescriptlang.org/)
+[![npm version](https://badge.fury.io/js/ts-component-registry.svg)](https://badge.fury.io/js/ts-component-registry)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)]()
 
-## 🚀 Why ComponentMap?
+## 🚀 Why TypeScript Component Registry?
 
-**Stop writing boilerplate code for strategy patterns!** ComponentMap automatically discovers and injects your implementations using simple decorators, so you can focus on business logic instead of manual registration.
+**Stop writing boilerplate code for strategy patterns!** This library automatically discovers and injects your implementations using simple decorators, so you can focus on business logic instead of manual registration.
 
 ### ❌ The Old Way (Lots of Boilerplate)
 ```typescript
@@ -28,30 +27,35 @@ class PaymentService {
 }
 ```
 
-### ✅ The ComponentMap Way (Zero Boilerplate)
+### ✅ The Component Registry Way (Zero Boilerplate)
 ```typescript
-// 1️⃣ Just annotate your components
-@Component('payment-processors')
-class StripeProcessor implements PaymentProcessor {
+// 1️⃣ Define your component base class
+abstract class PaymentProcessor extends ComponentMapKey<string> {
+  abstract process(amount: number): Promise<string>;
+}
+
+// 2️⃣ Just annotate your implementations
+@Component(PaymentProcessor)
+class StripeProcessor extends PaymentProcessor {
   getComponentMapKey() { return 'stripe'; }
-  // Implementation here - no manual registration needed!
+  async process(amount: number) { return `Charged $${amount} via Stripe`; }
 }
 
-@Component('payment-processors')
-class PayPalProcessor implements PaymentProcessor {
+@Component(PaymentProcessor)
+class PayPalProcessor extends PaymentProcessor {
   getComponentMapKey() { return 'paypal'; }
-  // Implementation here
+  async process(amount: number) { return `Charged $${amount} via PayPal`; }
 }
 
-// 2️⃣ Auto-inject all components
+// 3️⃣ Auto-inject all components
 class PaymentService {
-  @ComponentMap<string, PaymentProcessor>('payment-processors')
+  @ComponentMap(PaymentProcessor)
   private processors!: Map<string, PaymentProcessor>;
   
   // That's it! All processors are automatically discovered and injected 🎉
 }
 
-// 3️⃣ One line to start auto-discovery
+// 4️⃣ One line to start auto-discovery
 await initializeComponentMaps(['dist/src']);
 ```
 
@@ -59,22 +63,22 @@ await initializeComponentMaps(['dist/src']);
 
 ### Installation
 ```bash
-npm install @your-scope/component-map reflect-metadata
+npm install ts-component-registry reflect-metadata
 ```
 
 ### 30-Second Example
 ```typescript
 import 'reflect-metadata';
-import { Component, ComponentMap, initializeComponentMaps, ComponentMapKey } from '@your-scope/component-map';
+import { Component, ComponentMap, initializeComponentMaps, ComponentMapKey } from 'ts-component-registry';
 
-// 1️⃣ Define your interface
-interface PaymentProcessor extends ComponentMapKey<string> {
-  process(amount: number): Promise<string>;
+// 1️⃣ Define your component base class
+abstract class PaymentProcessor extends ComponentMapKey<string> {
+  abstract process(amount: number): Promise<string>;
 }
 
 // 2️⃣ Implement with @Component decorator
-@Component('payment-processors')
-class StripeProcessor implements PaymentProcessor {
+@Component(PaymentProcessor)
+class StripeProcessor extends PaymentProcessor {
   getComponentMapKey(): string { return 'stripe'; }
   
   async process(amount: number): Promise<string> {
@@ -82,8 +86,8 @@ class StripeProcessor implements PaymentProcessor {
   }
 }
 
-@Component('payment-processors')
-class PayPalProcessor implements PaymentProcessor {
+@Component(PaymentProcessor)
+class PayPalProcessor extends PaymentProcessor {
   getComponentMapKey(): string { return 'paypal'; }
   
   async process(amount: number): Promise<string> {
@@ -93,7 +97,7 @@ class PayPalProcessor implements PaymentProcessor {
 
 // 3️⃣ Use with automatic injection
 class PaymentService {
-  @ComponentMap<string, PaymentProcessor>('payment-processors')
+  @ComponentMap(PaymentProcessor)
   private processors!: Map<string, PaymentProcessor>;
   
   async charge(method: string, amount: number): Promise<string> {
@@ -132,20 +136,20 @@ main().catch(console.error);
 ```typescript
 enum AuthProvider { OAUTH = 'oauth', SAML = 'saml', LOCAL = 'local' }
 
-interface AuthHandler extends ComponentMapKey<AuthProvider> {
-  authenticate(credentials: any): Promise<User>;
+abstract class AuthHandler extends ComponentMapKey<AuthProvider> {
+  abstract authenticate(credentials: any): Promise<User>;
 }
 
-@Component('auth-handlers')
-class OAuthHandler implements AuthHandler {
+@Component(AuthHandler)
+class OAuthHandler extends AuthHandler {
   getComponentMapKey() { return AuthProvider.OAUTH; }
   async authenticate(token: string): Promise<User> {
     // OAuth implementation
   }
 }
 
-@Component('auth-handlers')
-class SAMLHandler implements AuthHandler {
+@Component(AuthHandler)
+class SAMLHandler extends AuthHandler {
   getComponentMapKey() { return AuthProvider.SAML; }
   async authenticate(assertion: string): Promise<User> {
     // SAML implementation
@@ -153,7 +157,7 @@ class SAMLHandler implements AuthHandler {
 }
 
 class AuthService {
-  @ComponentMap<AuthProvider, AuthHandler>('auth-handlers')
+  @ComponentMap(AuthHandler)
   private handlers!: Map<AuthProvider, AuthHandler>;
   
   async authenticate(provider: AuthProvider, credentials: any): Promise<User> {
@@ -169,20 +173,20 @@ class AuthService {
 <summary><strong>📁 File Processors</strong></summary>
 
 ```typescript
-interface FileProcessor extends ComponentMapKey<string> {
-  process(file: Buffer): Promise<ProcessedFile>;
+abstract class FileProcessor extends ComponentMapKey<string> {
+  abstract process(file: Buffer): Promise<ProcessedFile>;
 }
 
-@Component('file-processors')
-class PDFProcessor implements FileProcessor {
+@Component(FileProcessor)
+class PDFProcessor extends FileProcessor {
   getComponentMapKey() { return '.pdf'; }
   async process(file: Buffer): Promise<ProcessedFile> {
     // PDF processing logic
   }
 }
 
-@Component('file-processors')
-class ImageProcessor implements FileProcessor {
+@Component(FileProcessor)
+class ImageProcessor extends FileProcessor {
   getComponentMapKey() { return '.jpg'; }
   async process(file: Buffer): Promise<ProcessedFile> {
     // Image processing logic
@@ -190,7 +194,7 @@ class ImageProcessor implements FileProcessor {
 }
 
 class FileService {
-  @ComponentMap<string, FileProcessor>('file-processors')
+  @ComponentMap(FileProcessor)
   private processors!: Map<string, FileProcessor>;
   
   async processFile(filename: string, file: Buffer): Promise<ProcessedFile> {
@@ -209,20 +213,20 @@ class FileService {
 ```typescript
 enum NotificationType { EMAIL = 'email', SMS = 'sms', PUSH = 'push' }
 
-interface NotificationSender extends ComponentMapKey<NotificationType> {
-  send(message: string, recipient: string): Promise<void>;
+abstract class NotificationSender extends ComponentMapKey<NotificationType> {
+  abstract send(message: string, recipient: string): Promise<void>;
 }
 
-@Component('notification-senders')
-class EmailSender implements NotificationSender {
+@Component(NotificationSender)
+class EmailSender extends NotificationSender {
   getComponentMapKey() { return NotificationType.EMAIL; }
   async send(message: string, recipient: string): Promise<void> {
     // Email sending logic
   }
 }
 
-@Component('notification-senders')
-class SMSSender implements NotificationSender {
+@Component(NotificationSender)
+class SMSSender extends NotificationSender {
   getComponentMapKey() { return NotificationType.SMS; }
   async send(message: string, recipient: string): Promise<void> {
     // SMS sending logic
@@ -230,7 +234,7 @@ class SMSSender implements NotificationSender {
 }
 
 class NotificationService {
-  @ComponentMap<NotificationType, NotificationSender>('notification-senders')
+  @ComponentMap(NotificationSender)
   private senders!: Map<NotificationType, NotificationSender>;
   
   async sendNotification(type: NotificationType, message: string, recipient: string): Promise<void> {
@@ -251,15 +255,15 @@ class NotificationService {
 
 ## 🏗️ Core Concepts
 
-### ComponentMapKey Interface
-Every component must implement this interface to provide its unique key:
+### ComponentMapKey Base Class
+Every component must extend this abstract class to provide its unique key:
 
 ```typescript
-interface ComponentMapKey<K> {
+abstract class ComponentMapKey<K> {
   /**
    * Returns the unique key this component should be registered under
    */
-  getComponentMapKey(): K;
+  abstract getComponentMapKey(): K;
 }
 ```
 
@@ -267,35 +271,52 @@ interface ComponentMapKey<K> {
 Marks a class for automatic discovery and registration:
 
 ```typescript
+// Type-based approach (recommended)
+@Component(BaseComponentClass, singleton?: boolean)
+
+// String-based approach (legacy)
 @Component(registryName: string, singleton?: boolean)
 ```
 
-**Parameters:**
-- `registryName`: The name of the registry to register this component in
-- `singleton`: Whether to create singleton instances (default: `true`)
-
-**Example:**
+**Examples:**
 ```typescript
-@Component('payment-processors')        // Singleton (default)
-@Component('handlers', false)          // New instance each time
-@Component('cache-providers', true)    // Explicitly singleton
+@Component(PaymentProcessor)           // Type-based, singleton (default)
+@Component(PaymentProcessor, false)    // Type-based, new instance each time
+@Component('handlers', true)           // String-based, explicitly singleton
 ```
 
 ### @ComponentMap Decorator
 Automatically injects all components from a registry:
 
 ```typescript
-@ComponentMap<KeyType, ValueType>(registryName: string)
+// Type-based approach (recommended)
+@ComponentMap(BaseComponentClass)
+
+// String-based approach (legacy)
+@ComponentMap(registryName: string)
 ```
 
 **Example:**
 ```typescript
 class MyService {
-  @ComponentMap<string, PaymentProcessor>('payment-processors')
+  @ComponentMap(PaymentProcessor)
   private processors!: Map<string, PaymentProcessor>;
   
-  @ComponentMap<CacheType, CacheProvider>('cache-providers')
+  @ComponentMap(CacheProvider)
   private caches!: Map<CacheType, CacheProvider>;
+}
+```
+
+### @InjectComponent Decorator
+Inject a specific component by its key:
+
+```typescript
+class OrderService {
+  @InjectComponent(PaymentProcessor, 'stripe')
+  private stripeProcessor!: PaymentProcessor;
+  
+  @InjectComponent(NotificationSender, NotificationType.EMAIL)
+  private emailSender!: NotificationSender;
 }
 ```
 
@@ -321,90 +342,135 @@ await initializeComponentMaps(['dist/src', 'dist/plugins']);
 await initializeComponentMaps(['src'], ['**/*.test.ts', '**/temp/**']);
 ```
 
+## 🔧 Logger Configuration
+
+The library includes a built-in logger system with configurable levels:
+
+```typescript
+import { Logger, LogLevel, logger } from 'ts-component-registry';
+
+// Configure logger for your needs
+Logger.configure({
+    level: LogLevel.INFO,        // DEBUG, INFO, WARN, ERROR, SILENT
+    enableColors: true,          // Colorized output
+    enableTimestamp: false,      // Add timestamps
+    prefix: '[MyApp]'           // Custom prefix
+});
+
+// Use in your code
+logger.info('🚀 Application starting...');
+logger.warn('⚠️ Deprecated feature used');
+logger.error('❌ Something went wrong');
+
+// Silent mode for production
+if (process.env.NODE_ENV === 'production') {
+    Logger.configure({ level: LogLevel.SILENT });
+}
+```
+
+**Logger Levels:**
+- `LogLevel.DEBUG` - Shows all messages (including component registration details)
+- `LogLevel.INFO` - Shows info, warn, and error messages (default)
+- `LogLevel.WARN` - Shows only warnings and errors
+- `LogLevel.ERROR` - Shows only errors
+- `LogLevel.SILENT` - No output
+
 ## 🚀 Advanced Usage
 
-### Complex Key Types
-Use any type as a component key:
+### Type-Based vs String-Based Registration
 
 ```typescript
-// String keys
-@Component('handlers')
-class UserHandler implements Handler<string> {
-  getComponentMapKey() { return 'user'; }
+// ✅ Type-based approach (recommended)
+abstract class PaymentProcessor extends ComponentMapKey<string> {
+  abstract process(amount: number): Promise<string>;
 }
 
-// Enum keys
-@Component('processors')
-class DataProcessor implements Processor<DataType> {
-  getComponentMapKey() { return DataType.JSON; }
+@Component(PaymentProcessor)  // Uses class name as registry
+class StripeProcessor extends PaymentProcessor { /* ... */ }
+
+class PaymentService {
+  @ComponentMap(PaymentProcessor)  // Type-safe injection
+  private processors!: Map<string, PaymentProcessor>;
 }
 
-// Complex object keys
-@Component('routes')
-class APIRoute implements Route<RouteKey> {
-  getComponentMapKey() { 
-    return { method: 'GET', path: '/api/users', version: 'v1' }; 
-  }
-}
-```
-
-### Conditional Registration
-Components can be conditionally registered based on environment:
-
-```typescript
+// ⚠️ String-based approach (legacy)
 @Component('payment-processors')
-class StripeProcessor implements PaymentProcessor {
-  getComponentMapKey() { return 'stripe'; }
-  // Always registered
-}
+class PayPalProcessor extends PaymentProcessor { /* ... */ }
 
-// Only register in development
-if (process.env.NODE_ENV === 'development') {
-  @Component('payment-processors')
-  class MockPaymentProcessor implements PaymentProcessor {
-    getComponentMapKey() { return 'mock'; }
-  }
+class PaymentService {
+  @ComponentMap('payment-processors')
+  private processors!: Map<string, PaymentProcessor>;
 }
 ```
 
-### Multiple Registries
-A service can inject from multiple registries:
+### Manual Component Registration
+Register components programmatically:
 
 ```typescript
-class OrderService {
-  @ComponentMap<string, PaymentProcessor>('payment-processors')
-  private payments!: Map<string, PaymentProcessor>;
-  
-  @ComponentMap<string, ShippingProvider>('shipping-providers')
-  private shipping!: Map<string, ShippingProvider>;
-  
-  @ComponentMap<string, TaxCalculator>('tax-calculators')
-  private taxes!: Map<string, TaxCalculator>;
-  
-  async processOrder(order: Order): Promise<OrderResult> {
-    const payment = this.payments.get(order.paymentMethod);
-    const shipping = this.shipping.get(order.shippingMethod);
-    const tax = this.taxes.get(order.region);
-    
-    // Process order with all providers
-  }
-}
+import { registerComponents } from 'ts-component-registry';
+
+// Register multiple components at once
+registerComponents(PaymentProcessor, [
+  StripeProcessor,
+  PayPalProcessor,
+  ApplePayProcessor
+]);
+
+// Or register with string-based registry
+registerComponents('custom-handlers', [
+  CustomHandler1,
+  CustomHandler2
+], false); // Non-singleton
 ```
 
 ### Manual Component Access
 Access components programmatically when needed:
 
 ```typescript
-import { getComponent, getAllComponents } from '@your-scope/component-map';
+import { getComponent, getAllComponents, getSingletonComponentMap } from 'ts-component-registry';
 
 // Get a specific component
-const stripeProcessor = getComponent<string, PaymentProcessor>('payment-processors', 'stripe');
+const stripeProcessor = getComponent(PaymentProcessor, 'stripe');
 
 // Get all components from a registry
-const allProcessors = getAllComponents<string, PaymentProcessor>('payment-processors');
+const allProcessors = getAllComponents(PaymentProcessor);
+
+// Get a SingletonComponentMap (same as @ComponentMap injection)
+const processorMap = getSingletonComponentMap(PaymentProcessor);
 
 // Check what's available
 console.log('Available processors:', Array.from(allProcessors.keys()));
+```
+
+### Complex Key Types
+Use any type as a component key:
+
+```typescript
+// String keys
+@Component(UserHandler)
+class UserHandler extends ComponentMapKey<string> {
+  getComponentMapKey() { return 'user'; }
+}
+
+// Enum keys
+@Component(DataProcessor)
+class JSONProcessor extends ComponentMapKey<DataType> {
+  getComponentMapKey() { return DataType.JSON; }
+}
+
+// Complex object keys
+interface RouteKey {
+  method: string;
+  path: string;
+  version: string;
+}
+
+@Component(APIRoute)
+class UsersRoute extends ComponentMapKey<RouteKey> {
+  getComponentMapKey() { 
+    return { method: 'GET', path: '/api/users', version: 'v1' }; 
+  }
+}
 ```
 
 ### Singleton vs Non-Singleton
@@ -412,129 +478,33 @@ Control instance creation behavior:
 
 ```typescript
 // Singleton (default) - same instance returned every time
-@Component('cache-providers')
-class RedisCache implements CacheProvider {
+@Component(CacheProvider)
+class RedisCache extends CacheProvider {
   private connection: Redis;
   
   constructor() {
+    super();
     this.connection = new Redis(); // Created once
   }
 }
 
 // Non-singleton - new instance every time
-@Component('request-handlers', false)
-class RequestHandler implements Handler {
+@Component(RequestHandler, false)
+class HTTPRequestHandler extends RequestHandler {
   private requestId: string;
   
   constructor() {
+    super();
     this.requestId = generateId(); // Unique per request
   }
 }
-```
-
-## 🔧 Framework Integration
-
-### Express.js
-```typescript
-import express from 'express';
-import 'reflect-metadata';
-import { initializeComponentMaps, ComponentMap } from '@your-scope/component-map';
-
-class APIRouter {
-  @ComponentMap<string, RequestHandler>('request-handlers')
-  private handlers!: Map<string, RequestHandler>;
-  
-  setupRoutes(app: express.Application) {
-    app.use('/api/:resource/:action', (req, res, next) => {
-      const handlerKey = `${req.params.resource}:${req.params.action}`;
-      const handler = this.handlers.get(handlerKey);
-      
-      if (handler) {
-        handler.handle(req, res);
-      } else {
-        res.status(404).json({ error: 'Endpoint not found' });
-      }
-    });
-  }
-}
-
-// Initialize
-async function startServer() {
-  await initializeComponentMaps(['dist/src']);
-  
-  const app = express();
-  const router = new APIRouter();
-  router.setupRoutes(app);
-  
-  app.listen(3000);
-}
-```
-
-### NestJS
-```typescript
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ComponentMap, initializeComponentMaps } from '@your-scope/component-map';
-
-@Injectable()
-export class PaymentService implements OnModuleInit {
-  @ComponentMap<string, PaymentProcessor>('payment-processors')
-  private processors!: Map<string, PaymentProcessor>;
-  
-  async onModuleInit() {
-    // Initialize ComponentMap in NestJS lifecycle
-    await initializeComponentMaps(['dist/src']);
-  }
-  
-  async processPayment(method: string, amount: number): Promise<string> {
-    const processor = this.processors.get(method);
-    if (!processor) {
-      throw new BadRequestException(`Unsupported payment method: ${method}`);
-    }
-    return processor.process(amount);
-  }
-}
-```
-
-### Fastify
-```typescript
-import Fastify from 'fastify';
-import 'reflect-metadata';
-import { ComponentMap, initializeComponentMaps } from '@your-scope/component-map';
-
-class ValidationService {
-  @ComponentMap<string, RequestValidator>('validators')
-  private validators!: Map<string, RequestValidator>;
-  
-  validate(route: string, data: any): boolean {
-    const validator = this.validators.get(route);
-    return validator ? validator.validate(data) : true;
-  }
-}
-
-const fastify = Fastify();
-
-// Plugin for ComponentMap integration
-fastify.register(async function (fastify) {
-  await initializeComponentMaps(['dist/src']);
-  
-  const validationService = new ValidationService();
-  
-  fastify.addHook('preValidation', async (request, reply) => {
-    const routeKey = `${request.method}:${request.url}`;
-    const isValid = validationService.validate(routeKey, request.body);
-    
-    if (!isValid) {
-      reply.code(400).send({ error: 'Validation failed' });
-    }
-  });
-});
 ```
 
 ## 🧪 Testing Guide
 
 ### Unit Testing
 ```typescript
-import { DIContainer } from '@your-scope/component-map';
+import { DIContainer } from 'ts-component-registry';
 
 describe('PaymentService', () => {
   let paymentService: PaymentService;
@@ -548,10 +518,10 @@ describe('PaymentService', () => {
     mockProcessor = {
       getComponentMapKey: jest.fn().mockReturnValue('stripe'),
       process: jest.fn().mockResolvedValue('mock payment processed')
-    };
+    } as any;
     
     DIContainer.getInstance().registerComponent(
-      'payment-processors', 
+      'PaymentProcessor',
       () => mockProcessor
     );
     
@@ -577,11 +547,14 @@ describe('PaymentService Integration', () => {
   
   it('should discover all payment processors', () => {
     const container = DIContainer.getInstance();
-    const registry = container.getRegistryInfo('payment-processors');
+    const registryNames = container.getRegistryNames();
     
-    expect(registry?.size).toBeGreaterThan(0);
-    expect(container.has('payment-processors', 'stripe')).toBe(true);
-    expect(container.has('payment-processors', 'paypal')).toBe(true);
+    expect(registryNames).toContain('PaymentProcessor');
+    
+    const allProcessors = getAllComponents(PaymentProcessor);
+    expect(allProcessors.size).toBeGreaterThan(0);
+    expect(allProcessors.has('stripe')).toBe(true);
+    expect(allProcessors.has('paypal')).toBe(true);
   });
   
   it('should process real payments', async () => {
@@ -591,132 +564,76 @@ describe('PaymentService Integration', () => {
     expect(providers).toContain('stripe');
     expect(providers).toContain('paypal');
     
-    // Test with real implementation (might be mocked in test env)
+    // Test with real implementation
     const result = await paymentService.charge('stripe', 10.00);
     expect(result).toContain('Stripe');
   });
 });
 ```
 
-### Test Utilities
+## 🔧 Framework Integration
+
+### Express.js
 ```typescript
-// Test helper for component registration
-export function registerTestComponent<K, V>(
-  registryName: string, 
-  key: K, 
-  component: V
-): void {
-  DIContainer.getInstance().registerComponent(
-    registryName,
-    () => component,
-    false // Non-singleton for tests
-  );
+import express from 'express';
+import 'reflect-metadata';
+import { initializeComponentMaps, ComponentMap } from 'ts-component-registry';
+
+abstract class RequestHandler extends ComponentMapKey<string> {
+  abstract handle(req: express.Request, res: express.Response): Promise<void>;
 }
 
-// Test helper for creating mock components
-export function createMockComponent<K>(
-  key: K,
-  overrides: Partial<ComponentMapKey<K>> = {}
-): jest.Mocked<ComponentMapKey<K>> {
-  return {
-    getComponentMapKey: jest.fn().mockReturnValue(key),
-    ...overrides
-  } as jest.Mocked<ComponentMapKey<K>>;
-}
-```
-
-## 🚀 Performance & Bundle Size
-
-| Metric | Value |
-|--------|-------|
-| Bundle Size (minified) | < 8KB |
-| Bundle Size (gzipped) | < 3KB |
-| Runtime Overhead | ~0.1ms per lookup |
-| Memory Footprint | ~1KB per 100 components |
-| TypeScript Support | Full type inference |
-
-### Benchmarks
-```
-Component Registration: 500,000 ops/sec
-Component Lookup: 10,000,000 ops/sec
-Auto-Discovery: ~50ms for 1000 files
-Memory Usage: ~5MB for 1000 components
-```
-
-## 🆚 Comparison with Alternatives
-
-| Feature | ComponentMap | Manual Maps | Factory Pattern | DI Containers |
-|---------|--------------|-------------|-----------------|---------------|
-| Boilerplate Code | ✅ None | ❌ High | ⚠️ Medium | ⚠️ Medium |
-| Auto-Discovery | ✅ Yes | ❌ No | ❌ No | ✅ Yes |
-| Type Safety | ✅ Full | ✅ Full | ✅ Full | ⚠️ Partial |
-| Learning Curve | ✅ Low | ✅ None | ⚠️ Medium | ❌ High |
-| Bundle Size | ✅ Small | ✅ None | ✅ Small | ❌ Large |
-| Decorator Support | ✅ Yes | ❌ No | ❌ No | ✅ Yes |
-| Runtime Performance | ✅ Fast | ✅ Fast | ⚠️ Medium | ⚠️ Medium |
-
-## 🔄 Migration Guide
-
-### From Manual Maps
-```typescript
-// Before: Manual map management
-class OrderService {
-  private processors = new Map<string, OrderProcessor>();
+class APIRouter {
+  @ComponentMap(RequestHandler)
+  private handlers!: Map<string, RequestHandler>;
   
-  constructor() {
-    this.processors.set('online', new OnlineOrderProcessor());
-    this.processors.set('offline', new OfflineOrderProcessor());
-    this.processors.set('subscription', new SubscriptionOrderProcessor());
+  setupRoutes(app: express.Application) {
+    app.use('/api/:resource/:action', async (req, res, next) => {
+      const handlerKey = `${req.params.resource}:${req.params.action}`;
+      const handler = this.handlers.get(handlerKey);
+      
+      if (handler) {
+        await handler.handle(req, res);
+      } else {
+        res.status(404).json({ error: 'Endpoint not found' });
+      }
+    });
   }
 }
 
-// After: ComponentMap with auto-discovery
-@Component('order-processors')
-class OnlineOrderProcessor implements OrderProcessor {
-  getComponentMapKey() { return 'online'; }
-}
-
-@Component('order-processors')
-class OfflineOrderProcessor implements OrderProcessor {
-  getComponentMapKey() { return 'offline'; }
-}
-
-@Component('order-processors')
-class SubscriptionOrderProcessor implements OrderProcessor {
-  getComponentMapKey() { return 'subscription'; }
-}
-
-class OrderService {
-  @ComponentMap<string, OrderProcessor>('order-processors')
-  private processors!: Map<string, OrderProcessor>;
+// Initialize
+async function startServer() {
+  await initializeComponentMaps(['dist/src']);
   
-  // No constructor needed! Components auto-injected
+  const app = express();
+  const router = new APIRouter();
+  router.setupRoutes(app);
+  
+  app.listen(3000);
 }
 ```
 
-### From Factory Pattern
+### NestJS
 ```typescript
-// Before: Factory pattern
-class ProcessorFactory {
-  static create(type: string): OrderProcessor {
-    switch (type) {
-      case 'online': return new OnlineOrderProcessor();
-      case 'offline': return new OfflineOrderProcessor();
-      case 'subscription': return new SubscriptionOrderProcessor();
-      default: throw new Error(`Unknown processor type: ${type}`);
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { ComponentMap, initializeComponentMaps } from 'ts-component-registry';
+
+@Injectable()
+export class PaymentService implements OnModuleInit {
+  @ComponentMap(PaymentProcessor)
+  private processors!: Map<string, PaymentProcessor>;
+  
+  async onModuleInit() {
+    // Initialize ComponentMap in NestJS lifecycle
+    await initializeComponentMaps(['dist/src']);
+  }
+  
+  async processPayment(method: string, amount: number): Promise<string> {
+    const processor = this.processors.get(method);
+    if (!processor) {
+      throw new BadRequestException(`Unsupported payment method: ${method}`);
     }
-  }
-}
-
-// After: ComponentMap (auto-cached singletons)
-class OrderService {
-  @ComponentMap<string, OrderProcessor>('order-processors')
-  private processors!: Map<string, OrderProcessor>;
-  
-  getProcessor(type: string): OrderProcessor {
-    const processor = this.processors.get(type);
-    if (!processor) throw new Error(`Unknown processor type: ${type}`);
-    return processor; // Already instantiated and cached
+    return processor.process(amount);
   }
 }
 ```
@@ -733,7 +650,7 @@ class OrderService {
 **Solution:** Import at the very top of your main file:
 ```typescript
 import 'reflect-metadata'; // Must be first import
-import { initializeComponentMaps } from '@your-scope/component-map';
+import { initializeComponentMaps } from 'ts-component-registry';
 ```
 </details>
 
@@ -752,11 +669,10 @@ const service = new MyService(); // Now components are injected
 
 **Debug:** Check what was discovered:
 ```typescript
-import { DIContainer } from '@your-scope/component-map';
+import { DIContainer } from 'ts-component-registry';
 
 const container = DIContainer.getInstance();
 console.log('Registries:', container.getRegistryNames());
-console.log('Components:', container.getRegistryInfo('my-registry'));
 ```
 </details>
 
@@ -793,58 +709,66 @@ await initializeComponentMaps(['dist']);
 ```
 </details>
 
-<details>
-<summary><strong>❌ Circular dependency issues</strong></summary>
-
-**Problem:** Components can't be instantiated due to circular dependencies
-
-**Solution:** Use lazy loading or dependency injection:
-```typescript
-@Component('services')
-class MyService {
-  // Lazy inject to avoid circular deps
-  @InjectComponent('other-services', 'logger')
-  private logger!: Logger;
-}
-```
-</details>
-
-### Debug Mode
-Enable verbose logging to see what's happening:
-
-```typescript
-// Set environment variable
-process.env.COMPONENTMAP_DEBUG = 'true';
-
-// Or enable programmatically
-import { ComponentScanner } from '@your-scope/component-map';
-ComponentScanner.getInstance().enableDebug();
-
-// Then run initialization
-await initializeComponentMaps(['src']);
-```
-
 ## 📚 API Reference
 
-### Core Decorators
+### Core Classes
 
-#### @Component(registryName, singleton?)
+#### ComponentMapKey<K>
 ```typescript
+abstract class ComponentMapKey<K> {
+  abstract getComponentMapKey(): K;
+}
+```
+Base class that all components must extend.
+
+#### DIContainer
+```typescript
+class DIContainer {
+  static getInstance(): DIContainer
+  registerComponent<K>(registryName: string, constructor: Function, singleton?: boolean): void
+  get<K, T>(registryName: string, key: K): T | undefined
+  getAll<K, T>(registryName: string): Map<K, T>
+  getSingletonComponentMap<K, T>(registryName: string): SingletonComponentMap<K, T>
+  clearAll(): void
+  getRegistryNames(): string[]
+}
+```
+
+#### Logger
+```typescript
+class Logger {
+  static getInstance(): Logger
+  static configure(config: LoggerConfig): void
+  setLevel(level: LogLevel): void
+  enableColors(enable: boolean): void
+  enableTimestamp(enable: boolean): void
+  setPrefix(prefix: string): void
+  debug(message: string, ...args: any[]): void
+  info(message: string, ...args: any[]): void
+  warn(message: string, ...args: any[]): void
+  error(message: string, ...args: any[]): void
+}
+```
+
+### Decorators
+
+#### @Component()
+```typescript
+@Component(componentType: AbstractConstructor<T>, singleton?: boolean = true)
 @Component(registryName: string, singleton?: boolean = true)
 ```
-Marks a class for automatic discovery and registration.
 
-#### @ComponentMap(registryName)
+#### @ComponentMap()
 ```typescript
-@ComponentMap<K, V>(registryName: string)
+@ComponentMap(componentType: AbstractConstructor<T>)
+@ComponentMap(registryName: string)
 ```
-Injects all components from a registry as a `Map<K, V>`.
 
-#### @InjectComponent(registryName, componentKey)
+#### @InjectComponent()
 ```typescript
-@InjectComponent<K>(registryName: string, componentKey: K)
+@InjectComponent(componentType: AbstractConstructor<T>, componentKey: K)
+@InjectComponent(registryName: string, componentKey: K)
 ```
-Injects a specific component by its key.
 
 ### Utility Functions
 
@@ -855,58 +779,37 @@ async function initializeComponentMaps(
   excludePatterns?: string[]
 ): Promise<void>
 ```
-Scans directories and registers all `@Component` decorated classes.
+
+#### registerComponents()
+```typescript
+function registerComponents<K, V>(
+  componentType: AbstractConstructor<V>,
+  components: Array<Constructor<V>>,
+  singleton?: boolean
+): void
+```
 
 #### getComponent()
 ```typescript
-function getComponent<K, T>(registryName: string, key: K): T | undefined
+function getComponent<K, T>(
+  componentType: AbstractConstructor<T>,
+  key: K
+): T | undefined
 ```
-Retrieves a specific component by key.
 
 #### getAllComponents()
 ```typescript
-function getAllComponents<K, T>(registryName: string): Map<K, T>
+function getAllComponents<K, T>(
+  componentType: AbstractConstructor<T>
+): Map<K, T>
 ```
-Retrieves all components from a registry.
 
-### Core Classes
-
-#### DIContainer
-The main dependency injection container (singleton).
-
+#### getSingletonComponentMap()
 ```typescript
-class DIContainer {
-  static getInstance(): DIContainer
-  registerComponent<K>(registryName: string, constructor: Function, singleton?: boolean): void
-  get<K, T>(registryName: string, key: K): T | undefined
-  getAll<K, T>(registryName: string): Map<K, T>
-  has(registryName: string, key: K): boolean
-  clearAll(): void
-  getRegistryNames(): string[]
-}
+function getSingletonComponentMap<K, T>(
+  componentType: AbstractConstructor<T>
+): SingletonComponentMap<K, T>
 ```
-
-#### ComponentScanner
-Handles automatic component discovery.
-
-```typescript
-class ComponentScanner {
-  static getInstance(): ComponentScanner
-  async scanComponents(baseDir: string, patterns: string[], excludePatterns: string[]): Promise<void>
-  enableDebug(): void
-}
-```
-
-## 📈 Roadmap
-
-- [ ] **Hot Reloading** - Replace components at runtime for development
-- [ ] **Component Lifecycle** - OnInit, OnDestroy hooks for components
-- [ ] **Async Components** - Support for async component initialization
-- [ ] **Component Metadata** - Attach metadata to components (version, description, etc.)
-- [ ] **Performance Monitoring** - Built-in performance tracking and metrics
-- [ ] **Visual Dev Tools** - Browser extension for debugging ComponentMaps
-- [ ] **Plugin System** - Load components from external modules dynamically
-- [ ] **Configuration Injection** - Inject configuration objects into components
 
 ## 🤝 Contributing
 
@@ -914,28 +817,23 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ### Development Setup
 ```bash
-git clone https://github.com/your-username/ts-component-map
-cd ts-component-map
+git clone https://github.com/IsmailKharoub/ts-component-registry
+cd ts-component-registry
 npm install
 npm run build
 npm test
 ```
 
-### Running Examples
+### Running Tests
 ```bash
-# Run the auto-discovery demo
-npm run build
-node dist/examples/spring-boot-style/demo.js
-
-# Run tests
-npm test
+npm test              # Run tests
 npm run test:watch    # Watch mode
 npm run test:coverage # Coverage report
 ```
 
 ## 📄 License
 
-MIT © [Your Name](LICENSE)
+MIT © [Ismail Kharoub](LICENSE)
 
 ---
 
@@ -943,8 +841,8 @@ MIT © [Your Name](LICENSE)
   <strong>Made with ❤️ for developers who hate boilerplate code</strong>
   <br>
   <br>
-  <a href="https://github.com/your-username/ts-component-map">⭐ Star on GitHub</a> •
-  <a href="https://npmjs.com/package/@your-scope/component-map">📦 NPM Package</a> •
-  <a href="https://github.com/your-username/ts-component-map/issues">🐛 Report Bug</a> •
-  <a href="https://github.com/your-username/ts-component-map/discussions">💬 Discussions</a>
+  <a href="https://github.com/IsmailKharoub/ts-component-registry">⭐ Star on GitHub</a> •
+  <a href="https://npmjs.com/package/ts-component-registry">📦 NPM Package</a> •
+  <a href="https://github.com/IsmailKharoub/ts-component-registry/issues">🐛 Report Bug</a> •
+  <a href="https://github.com/IsmailKharoub/ts-component-registry/discussions">💬 Discussions</a>
 </div> 
