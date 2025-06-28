@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import * as path from 'path';
 import { DIContainer } from './DIContainer';
+import { logger } from './Logger';
 
 /**
  * High-performance component scanner with fast-glob integration,
@@ -29,11 +30,11 @@ export class ComponentScanner {
     const root = path.resolve(process.cwd(), baseDir);
     if (this.scannedDirs.has(root)) return;
 
-    console.log(`🔍 Scanning: ${path.relative(process.cwd(), root)}`);
+    logger.info(`🔍 Scanning: ${path.relative(process.cwd(), root)}`);
 
     // Use fast-glob for efficient file discovery
-    const fg = await import('fast-glob');
-    const files = await fg.async(include, {
+    const fg = (await import('fast-glob')).default;
+    const files = await fg(include, {
       cwd: root,
       ignore: exclude,
       absolute: true,
@@ -46,7 +47,7 @@ export class ComponentScanner {
 
     const names = this.container.getRegistryNames();
     const total = names.reduce((sum, n) => sum + (this.container.getRegistryInfo(n)?.size || 0), 0);
-    console.log(`✅ Complete! ${total} components in ${names.length} registries.`, `📦 ${names.join(', ')}`);
+    logger.info(`✅ Complete! ${total} components in ${names.length} registries.`, `📦 ${names.join(', ')}`);
   }
 
   /**
@@ -56,7 +57,7 @@ export class ComponentScanner {
     for (let i = 0; i < paths.length; i += batchSize) {
       await Promise.all(
         paths.slice(i, i + batchSize).map(p => this.register(p).catch(err =>
-          console.warn(`⚠️ Load failed: ${path.relative(process.cwd(), p)}:`, err.message)
+          logger.warn(`⚠️ Load failed: ${path.relative(process.cwd(), p)}:`, err.message)
         ))
       );
     }
@@ -76,7 +77,7 @@ export class ComponentScanner {
 
     for (const exp of Object.values(mod)) {
       if (this.isComponent(exp)) {
-        console.log(`🔧 ${(exp as any).name || 'Component'} registered`);
+        logger.debug(`🔧 ${(exp as any).name || 'Component'} registered`);
       }
     }
   }
@@ -97,7 +98,7 @@ export class ComponentScanner {
    * Scan specific file list
    */
   async scanFiles(files: string[]): Promise<void> {
-    console.log(`🔍 Scanning ${files.length} files...`);
+    logger.info(`🔍 Scanning ${files.length} files...`);
     await this.loadInBatches(files, 10);
   }
 
@@ -119,6 +120,6 @@ export class ComponentScanner {
   clearCaches(): void {
     this.scannedDirs.clear();
     this.moduleCache.clear();
-    console.log('🧹 Caches cleared');
+    logger.info('🧹 Caches cleared');
   }
 }

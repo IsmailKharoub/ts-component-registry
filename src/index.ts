@@ -4,6 +4,10 @@ export { DIContainer } from './core/DIContainer';
 export { ComponentScanner } from './core/ComponentScanner';
 export { SingletonComponentMap } from './core/SingletonComponentMap';
 
+// Logger system
+export { Logger, LogLevel, logger } from './core/Logger';
+export type { LoggerConfig } from './core/Logger';
+
 // Decorators
 export {
     Component,
@@ -15,10 +19,4 @@ export {
     getAllComponents,
     getSingletonComponentMap
 } from './decorators/ComponentMapDecorators';
-
-// Payment examples
-export { PaymentProcessor } from './examples/payment/PaymentProcessor';
-export { StripeProcessor } from './examples/payment/StripeProcessor';
-export { PayPalProcessor } from './examples/payment/PayPalProcessor';
-export { PaymentService } from './examples/payment/PaymentService';
 
