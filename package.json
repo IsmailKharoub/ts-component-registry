@@ -57,10 +57,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/ts-component-map.git"
+    "url": "https://github.com/IsmailKharoub/ts-component-registry.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/ts-component-map/issues"
+    "url": "https://github.com/IsmailKharoub/ts-component-registry/issues"
   },
-  "homepage": "https://github.com/your-username/ts-component-map#readme"
+  "homepage": "https://github.com/IsmailKharoub/ts-component-registry#readme"
 }
