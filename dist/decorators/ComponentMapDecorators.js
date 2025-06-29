@@ -75,13 +75,19 @@ exports.InjectComponent = InjectComponent;
  * Initialize method - call this at application startup
  * Scans for all components automatically
  */
-async function initializeComponentMaps(scanDirs = ['src'], excludePatterns = ['**/*.test.ts', '**/*.test.js', '**/*.spec.ts', '**/*.spec.js']) {
+async function initializeComponentMaps(scanDirs = ['src'], excludePatterns = [
+    '**/*.d.ts', // TypeScript declaration files
+    '**/*.{test,spec}.{ts,js}', // Test files
+    '**/test-setup.{ts,js}', // Test setup files
+    'node_modules', // Node modules
+    '**/*.map', // Source map files
+]) {
     if (componentsScanned)
         return; // Already scanned
     Logger_1.logger.info('🚀 Starting component auto-discovery...');
     const scanner = ComponentScanner_1.ComponentScanner.getInstance();
     for (const dir of scanDirs) {
-        await scanner.scanComponents(dir, ['**/*.ts', '**/*.js'], excludePatterns);
+        await scanner.scanComponents(dir, ['**/*.{ts,js}'], excludePatterns);
     }
     componentsScanned = true;
     Logger_1.logger.info('✅ Component auto-discovery complete!');

@@ -44,14 +44,21 @@ class ComponentScanner {
     /**
      * Scan and register components under baseDir using fast-glob
      */
-    async scanComponents(baseDir = 'src', include = ['**/*.{ts,js,mts,mjs,cts,cjs}'], exclude = ['**/*.d.ts', '**/*.{test,spec}.{ts,js}', 'node_modules']) {
+    async scanComponents(baseDir = 'src', include = ['**/*.{ts,js,mts,mjs,cts,cjs}'], exclude = [
+        '**/*.d.ts', // TypeScript declaration files
+        '**/*.{test,spec}.{ts,js}', // Test files
+        '**/test-setup.{ts,js}', // Test setup files
+        'node_modules', // Node modules
+        '**/*.map', // Source map files
+        '**/*.min.js', // Minified files
+    ]) {
         const root = path.resolve(process.cwd(), baseDir);
         if (this.scannedDirs.has(root))
             return;
         Logger_1.logger.info(`🔍 Scanning: ${path.relative(process.cwd(), root)}`);
         // Use fast-glob for efficient file discovery
-        const fg = (await Promise.resolve().then(() => __importStar(require('fast-glob')))).default;
-        const files = await fg(include, {
+        const { glob } = await Promise.resolve().then(() => __importStar(require('fast-glob')));
+        const files = await glob(include, {
             cwd: root,
             ignore: exclude,
             absolute: true,
@@ -69,8 +76,33 @@ class ComponentScanner {
      */
     async loadInBatches(paths, batchSize) {
         for (let i = 0; i < paths.length; i += batchSize) {
-            await Promise.all(paths.slice(i, i + batchSize).map(p => this.register(p).catch(err => Logger_1.logger.warn(`⚠️ Load failed: ${path.relative(process.cwd(), p)}:`, err.message))));
+            await Promise.all(paths.slice(i, i + batchSize).map(p => this.register(p).catch(err => {
+                // Skip logging for expected/non-critical errors
+                if (this.isExpectedError(err, p)) {
+                    return; // Silently skip expected errors
+                }
+                Logger_1.logger.warn(`⚠️ Load failed: ${path.relative(process.cwd(), p)}:`, err.message);
+            })));
         }
+    }
+    /**
+     * Check if an error is expected and should not be logged
+     */
+    isExpectedError(error, filePath) {
+        const fileName = path.basename(filePath);
+        const errorMsg = error.message;
+        // Skip logging for these expected cases:
+        return (
+        // Declaration files that can't find modules
+        fileName.endsWith('.d.ts') ||
+            // Test setup files in non-test environment
+            fileName.includes('test-setup') ||
+            // Demo files missing exports (common in examples)
+            (fileName.includes('demo') && errorMsg.includes('not defined')) ||
+            // Common missing module errors for declaration files
+            errorMsg.includes('Cannot find module') ||
+            // beforeEach/afterEach not defined (test environment issues)
+            errorMsg.includes('beforeEach') || errorMsg.includes('afterEach'));
     }
     /**
      * Import and register component exports

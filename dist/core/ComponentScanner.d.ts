@@ -19,6 +19,10 @@ export declare class ComponentScanner {
      */
     private loadInBatches;
     /**
+     * Check if an error is expected and should not be logged
+     */
+    private isExpectedError;
+    /**
      * Import and register component exports
      */
     private register;

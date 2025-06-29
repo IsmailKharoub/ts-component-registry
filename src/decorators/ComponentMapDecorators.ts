@@ -142,7 +142,13 @@ export function InjectComponent<K, V extends ComponentMapKey<K>>(
  */
 export async function initializeComponentMaps(
     scanDirs: string[] = ['src'],
-    excludePatterns: string[] = ['**/*.test.ts', '**/*.test.js', '**/*.spec.ts', '**/*.spec.js']
+    excludePatterns: string[] = [
+        '**/*.d.ts',           // TypeScript declaration files
+        '**/*.{test,spec}.{ts,js}', // Test files
+        '**/test-setup.{ts,js}',    // Test setup files
+        'node_modules',        // Node modules
+        '**/*.map',           // Source map files
+    ]
 ): Promise<void> {
     if (componentsScanned) return; // Already scanned
     
@@ -151,7 +157,7 @@ export async function initializeComponentMaps(
     const scanner = ComponentScanner.getInstance();
     
     for (const dir of scanDirs) {
-        await scanner.scanComponents(dir, ['**/*.ts', '**/*.js'], excludePatterns);
+        await scanner.scanComponents(dir, ['**/*.{ts,js}'], excludePatterns);
     }
     
     componentsScanned = true;
