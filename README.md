@@ -63,12 +63,20 @@ await initializeComponentMaps(['dist/src']);
 
 ### Installation
 ```bash
-npm install ts-component-registry reflect-metadata
+npm install ts-component-registry
+```
+
+### Zero Configuration Setup
+No need to import `reflect-metadata` manually - the library handles it automatically! 🎉
+
+Just import and start using:
+```typescript
+import { Component, ComponentMap } from 'ts-component-registry';
+// That's it! reflect-metadata is imported automatically
 ```
 
 ### 30-Second Example
 ```typescript
-import 'reflect-metadata';
 import { Component, ComponentMap, initializeComponentMaps, ComponentMapKey } from 'ts-component-registry';
 
 // 1️⃣ Define your component base class
@@ -576,7 +584,6 @@ describe('PaymentService Integration', () => {
 ### Express.js
 ```typescript
 import express from 'express';
-import 'reflect-metadata';
 import { initializeComponentMaps, ComponentMap } from 'ts-component-registry';
 
 abstract class RequestHandler extends ComponentMapKey<string> {
@@ -647,10 +654,11 @@ export class PaymentService implements OnModuleInit {
 
 **Problem:** Getting runtime errors about reflect-metadata
 
-**Solution:** Import at the very top of your main file:
+**Solution:** The library automatically imports reflect-metadata, but if you still have issues, ensure you're importing from the library:
 ```typescript
-import 'reflect-metadata'; // Must be first import
-import { initializeComponentMaps } from 'ts-component-registry';
+// ✅ Correct - automatic setup
+import { Component, ComponentMap } from 'ts-component-registry';
+
 ```
 </details>
 

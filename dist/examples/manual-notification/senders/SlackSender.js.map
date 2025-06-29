@@ -1,0 +1,1 @@
+{"version":3,"file":"SlackSender.js","sourceRoot":"","sources":["../../../../src/examples/manual-notification/senders/SlackSender.ts"],"names":[],"mappings":";;;AACA,gEAA6D;AAE7D,MAAa,WAAW;IACtB,OAAO;QACL,OAAO,mCAAgB,CAAC,KAAK,CAAC;IAChC,CAAC;IAED,KAAK,CAAC,IAAI,CAAC,OAAe;QACxB,OAAO,0BAA0B,OAAO,EAAE,CAAC;IAC7C,CAAC;CACF;AARD,kCAQC"}

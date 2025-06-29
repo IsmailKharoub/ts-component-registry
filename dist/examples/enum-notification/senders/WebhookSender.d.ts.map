@@ -1,0 +1,1 @@
+{"version":3,"file":"WebhookSender.d.ts","sourceRoot":"","sources":["../../../../src/examples/enum-notification/senders/WebhookSender.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,kBAAkB,EAAE,MAAM,kCAAkC,CAAC;AACtE,OAAO,EAAE,gBAAgB,EAAE,MAAM,2BAA2B,CAAC;AAE7D;;GAEG;AACH,qBACa,aAAc,SAAQ,kBAAkB;IACnD,kBAAkB,IAAI,gBAAgB;IAIhC,IAAI,CAAC,OAAO,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC;CAI7C"}

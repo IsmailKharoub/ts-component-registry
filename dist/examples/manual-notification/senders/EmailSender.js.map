@@ -1,0 +1,1 @@
+{"version":3,"file":"EmailSender.js","sourceRoot":"","sources":["../../../../src/examples/manual-notification/senders/EmailSender.ts"],"names":[],"mappings":";;;AACA,gEAA6D;AAE7D;;;GAGG;AACH,MAAa,WAAW;IACtB,OAAO;QACL,OAAO,mCAAgB,CAAC,KAAK,CAAC;IAChC,CAAC;IAED,KAAK,CAAC,IAAI,CAAC,OAAe;QACxB,gGAAgG;QAChG,OAAO,kBAAkB,OAAO,EAAE,CAAC;IACrC,CAAC;CACF;AATD,kCASC"}

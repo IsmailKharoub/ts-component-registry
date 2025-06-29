@@ -1,0 +1,1 @@
+{"version":3,"file":"WebhookSender.d.ts","sourceRoot":"","sources":["../../../../src/examples/manual-notification/senders/WebhookSender.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAAE,MAAM,kCAAkC,CAAC;AACtE,OAAO,EAAE,gBAAgB,EAAE,MAAM,2BAA2B,CAAC;AAE7D,qBAAa,aAAc,YAAW,kBAAkB;IACtD,OAAO,IAAI,gBAAgB;IAIrB,IAAI,CAAC,OAAO,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC;CAG7C"}

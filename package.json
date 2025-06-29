@@ -13,7 +13,9 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "example": "npm run build && node dist/examples/simple-notification/example.js"
+    "example": "npm run build && node dist/examples/simple-notification/example.js",
+    "example:enum": "npm run build && node dist/examples/enum-notification/index.js",
+    "example:manual": "npm run build && node dist/examples/manual-notification/index.js"
   },
   "keywords": [
     "typescript",

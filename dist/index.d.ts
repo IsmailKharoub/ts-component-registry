@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 export { ComponentMapKey } from './core/ComponentMapKey';
 export { DIContainer } from './core/DIContainer';
 export { ComponentScanner } from './core/ComponentScanner';

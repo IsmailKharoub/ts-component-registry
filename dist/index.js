@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSingletonComponentMap = exports.getAllComponents = exports.getComponent = exports.registerComponents = exports.initializeComponentMaps = exports.InjectComponent = exports.ComponentMap = exports.Component = exports.logger = exports.LogLevel = exports.Logger = exports.SingletonComponentMap = exports.ComponentScanner = exports.DIContainer = exports.ComponentMapKey = void 0;
+// Automatically import reflect-metadata so users don't need to worry about it
+require("reflect-metadata");
 // Core ComponentMap functionality
 var ComponentMapKey_1 = require("./core/ComponentMapKey");
 Object.defineProperty(exports, "ComponentMapKey", { enumerable: true, get: function () { return ComponentMapKey_1.ComponentMapKey; } });

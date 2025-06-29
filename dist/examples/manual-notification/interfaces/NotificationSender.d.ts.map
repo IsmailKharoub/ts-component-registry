@@ -1,0 +1,1 @@
+{"version":3,"file":"NotificationSender.d.ts","sourceRoot":"","sources":["../../../../src/examples/manual-notification/interfaces/NotificationSender.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,gBAAgB,EAAE,MAAM,2BAA2B,CAAC;AAE7D;;;GAGG;AACH,MAAM,WAAW,kBAAkB;IACjC;;;OAGG;IACH,OAAO,IAAI,gBAAgB,CAAC;IAE5B,IAAI,CAAC,OAAO,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC,CAAC;CACxC"}
